@@ -1,10 +1,12 @@
 import os
 
+import onnxruntime as ort
 from rembg import remove, new_session
 from PIL import Image
 
 class BackgroundRemover:
     def __init__(self):
+        ort.preload_dlls(directory="")
         self.session = new_session()
 
     def remove_background(self, input_path, output_path):
