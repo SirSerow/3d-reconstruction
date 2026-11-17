@@ -3,17 +3,16 @@ import argparse
 import logging
 import datetime
 
-from tifffile import logger
-
 from image_splitter import ImageSplitter
 from background_remover import BackgroundRemover
+from reconstructor import Reconstructor
 
 def main():
 
     start_time = datetime.datetime.now()
 
     # Create logger
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
@@ -32,6 +31,14 @@ def main():
     parser = argparse.ArgumentParser(description="3D Reconstruction Script")
     parser.add_argument("--input", required=True, help="Input image or video folder")
     parser.add_argument("--output", required=True, help="Output folder")
+    parser.add_argument(
+        "--dense", action="store_true",
+        help="Also create a dense point cloud and mesh (requires GPU-enabled PyCOLMAP)",
+    )
+    parser.add_argument(
+        "--device", choices=("cpu", "auto", "cuda"), default="cpu",
+        help="PyCOLMAP feature extraction and matching device (default: cpu)",
+    )
     args = parser.parse_args()
 
     input_path = args.input
@@ -82,6 +89,15 @@ def main():
             logger.info(f"Processing subfolder: {subfolder_path}")
 
             remover.remove_background_from_folder(subfolder_path, output_subfolder_path)
+
+    reconstruction_output_path = os.path.join(run_output_path, "reconstruction")
+    reconstructor = Reconstructor(reconstruction_output_path, device=args.device)
+    result = reconstructor.reconstruct_from_folder(
+        bg_removed_output_path, dense=args.dense,
+    )
+    for name, path in result.items():
+        if path is not None:
+            logger.info(f"{name}: {path}")
 
     finish_time = datetime.datetime.now()
     logger.info(f"Script finished. Duration: {finish_time - start_time}")

@@ -2,7 +2,17 @@
 
 This repository is for reconstructing a physical object from a full turn of a five-camera capture rig. The planned pipeline produces a 3D point cloud and a triangle mesh for geometry, then uses the posed photos and a colored point cloud to train a Gaussian splat for novel-view rendering.
 
-The repository currently contains the reconstruction plan. A local sample dataset is available under `.input/sample_1/`. The `.input/` directory is ignored by Git.
+The repository includes image splitting, background removal, and PyCOLMAP reconstruction classes, along with the reconstruction plan below. A local sample dataset is available under `.input/sample_1/`. The `.input/` directory is ignored by Git.
+
+## Running the pipeline
+
+Install the dependencies from `requirements_cpu.txt`, or use `requirements_gpu.txt` for GPU background removal. Run `src/main.py` with `--input` pointing to a composite-image or video folder and `--output` pointing to the output root. Each run creates a timestamped folder with `split`, `background_removed`, and `reconstruction` subfolders.
+
+`Reconstructor` in `src/reconstructor.py` accepts the background-removed PNG folders through `reconstruct_from_folder`. Each camera needs its own subfolder, such as `cam_0_0`, containing images with a foreground alpha channel and consistent dimensions. It generates RGB images and binary masks, shares lens parameters per camera folder, matches across all cameras, and estimates camera parameters and poses without prior calibration. Keep focus, zoom, and crop fixed within each camera's images. Use a new reconstruction output directory for every attempt.
+
+The default output is `reconstruction/sparse_object.ply`, with the estimated cameras and poses in `reconstruction/best_model`. Separate reconstruction components are retained under `reconstruction/sparse`; warnings identify disconnected models or images missing from the selected model. Inspect the sparse result before using it downstream.
+
+Add `--dense` to also create `reconstruction/dense/fused.ply` and `reconstruction/dense/mesh.ply`. This requires a GPU-enabled PyCOLMAP build and a supported GPU; the standard Windows pip wheel supports the default sparse workflow. The GPU requirements file enables GPU background removal and does not by itself enable PyCOLMAP dense stereo. `--device` selects `cpu` (default), `auto`, or `cuda` for PyCOLMAP feature extraction and matching. Feature masks do not automatically filter dense geometry, so inspect the dense cloud for outliers before accepting the mesh. [PyCOLMAP installation and GPU support](https://pypi.org/project/pycolmap/)
 
 ## Capture setup and input format
 

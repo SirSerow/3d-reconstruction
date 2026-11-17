@@ -27,7 +27,7 @@ class BackgroundRemover:
 
     
 if __name__ == "__main__":
-    folder_path = "C:/Users/oleg.serov/Projects/scripts/3d-reconstruction/.output/cam_1_1"
+    folder_path = ".input"
     output_folder = "output2"
     remover = BackgroundRemover()
     remover.remove_background_from_folder(folder_path, output_folder)

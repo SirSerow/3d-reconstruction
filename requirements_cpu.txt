@@ -2,3 +2,4 @@ numpy
 opencv-python
 rembg[cpu]
 pillow
+pycolmap>=4.2.1,<5
