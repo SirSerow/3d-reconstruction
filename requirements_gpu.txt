@@ -1,5 +1,11 @@
+# NVIDIA GPU environment: Linux/WSL2 x86_64, Python 3.11 or 3.12.
+# Install in a fresh environment, separately from requirements_cpu.txt.
 numpy
 opencv-python
 rembg[gpu]
+# Include the CUDA 12 and cuDNN libraries used by ort.preload_dlls().
+# Pin this CUDA 12 release to avoid pulling newer CUDA 13 runtimes.
+onnxruntime-gpu[cuda,cudnn]==1.23.2
 pillow
-pycolmap>=4.2.1,<5
+# Provides the same `import pycolmap` API with CUDA enabled.
+pycolmap-cuda12==4.2.1

@@ -6,13 +6,17 @@ The repository includes image splitting, background removal, and PyCOLMAP recons
 
 ## Running the pipeline
 
-Install the dependencies from `requirements_cpu.txt`, or use `requirements_gpu.txt` for GPU background removal. Run `src/main.py` with `--input` pointing to a composite-image or video folder and `--output` pointing to the output root. Each run creates a timestamped folder with `split`, `background_removed`, and `reconstruction` subfolders.
+Install the dependencies from `requirements_cpu.txt` for CPU processing. For an NVIDIA GPU machine, use x86_64 Linux or WSL2 with Python 3.11 or 3.12 and a working NVIDIA driver; confirm the GPU is visible with `nvidia-smi` inside that environment. Create a fresh virtual environment and install with `python -m pip install -r requirements_gpu.txt`. Install only one requirements file per environment: the CPU and CUDA PyCOLMAP packages both provide `import pycolmap`, and the CPU and GPU ONNX Runtime packages also share an import namespace.
+
+The GPU requirements select `pycolmap-cuda12==4.2.1` and the CUDA 12-compatible `onnxruntime-gpu[cuda,cudnn]==1.23.2` for GPU reconstruction and background removal. The ONNX Runtime extras install its CUDA and cuDNN libraries. The official PyCOLMAP CUDA wheels support Linux; native Windows requires a CUDA source build for GPU reconstruction. [PyCOLMAP CUDA package](https://pypi.org/project/pycolmap-cuda12/) · [ONNX Runtime CUDA libraries](https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html#preload-dlls)
+
+Run `src/main.py` with `--input` pointing to a composite-image or video folder and `--output` pointing to the output root. Each run creates a timestamped folder with `split`, `background_removed`, and `reconstruction` subfolders.
 
 `Reconstructor` in `src/reconstructor.py` accepts the background-removed PNG folders through `reconstruct_from_folder`. Each camera needs its own subfolder, such as `cam_0_0`, containing images with a foreground alpha channel and consistent dimensions. It generates RGB images and binary masks, shares lens parameters per camera folder, matches across all cameras, and estimates camera parameters and poses without prior calibration. Keep focus, zoom, and crop fixed within each camera's images. Use a new reconstruction output directory for every attempt.
 
 The default output is `reconstruction/sparse_object.ply`, with the estimated cameras and poses in `reconstruction/best_model`. Separate reconstruction components are retained under `reconstruction/sparse`; warnings identify disconnected models or images missing from the selected model. Inspect the sparse result before using it downstream.
 
-Add `--dense` to also create `reconstruction/dense/fused.ply` and `reconstruction/dense/mesh.ply`. This requires a GPU-enabled PyCOLMAP build and a supported GPU; the standard Windows pip wheel supports the default sparse workflow. The GPU requirements file enables GPU background removal and does not by itself enable PyCOLMAP dense stereo. `--device` selects `cpu` (default), `auto`, or `cuda` for PyCOLMAP feature extraction and matching. Feature masks do not automatically filter dense geometry, so inspect the dense cloud for outliers before accepting the mesh. [PyCOLMAP installation and GPU support](https://pypi.org/project/pycolmap/)
+Add `--dense` to also create `reconstruction/dense/fused.ply` and `reconstruction/dense/mesh.ply`. This requires the GPU environment described above. Add `--device cuda` to use the GPU for PyCOLMAP feature extraction and matching too; its default is `cpu`, and `auto` selects an available device. Feature masks do not automatically filter dense geometry, so inspect the dense cloud for outliers before accepting the mesh. [PyCOLMAP installation and GPU support](https://pypi.org/project/pycolmap/)
 
 ## Capture setup and input format
 
