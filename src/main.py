@@ -81,7 +81,7 @@ def main():
 
             logger.info(f"Processing subfolder: {subfolder_path}")
 
-            remover.remove_background(subfolder_path, output_subfolder_path)
+            remover.remove_background_from_folder(subfolder_path, output_subfolder_path)
 
     finish_time = datetime.datetime.now()
     logger.info(f"Script finished. Duration: {finish_time - start_time}")
